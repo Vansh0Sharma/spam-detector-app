@@ -1,5 +1,9 @@
 import streamlit as st
-import requests
+import joblib
+
+# Load the trained model and vectorizer
+model = joblib.load("spam_model.pkl")
+vectorizer = joblib.load("vectorizer.pkl")
 
 st.title("📩 Spam Message Detector")
 
@@ -9,15 +13,10 @@ if st.button("Check"):
     if message.strip() == "":
         st.warning("Please enter a message.")
     else:
-        response = requests.post(
-            "http://localhost:5000/predict",
-            json={"message": message}
-        )
-        if response.status_code == 200:
-            result = response.json()["result"]
-            if result == "spam":
-                st.error("🚨 This is spam!")
-            else:
-                st.success("✅ This is ham (safe).")
+        vec = vectorizer.transform([message])
+        prediction = model.predict(vec)[0]
+        result = 'spam' if prediction == 1 else 'ham'
+        if result == "spam":
+            st.error("🚨 This is spam!")
         else:
-            st.error("API Error. Check if Flask is running.")
+            st.success("✅ This is ham (safe).")
